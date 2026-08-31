@@ -2,6 +2,7 @@ export interface Verification {
   id: string;
   creator: string;
   repository_url: string;
+  commit_sha: string;
   release_ref: string;
   criteria: string;
   status: "CREATED" | "VERIFIED" | "FAILED" | "INCONCLUSIVE";
@@ -14,6 +15,7 @@ export interface Verification {
 export interface CreateVerificationInput {
   verification_id: string;
   repository_url: string;
+  commit_sha: string;
   release_ref: string;
   criteria: string;
 }

@@ -19,6 +19,7 @@ export function VerificationForm({ onComplete }: { onComplete: (value: Verificat
   const queryClient = useQueryClient();
   const [verificationId, setVerificationId] = useState("");
   const [repositoryUrl, setRepositoryUrl] = useState("");
+  const [commitSha, setCommitSha] = useState("");
   const [releaseRef, setReleaseRef] = useState("");
   const [criteria, setCriteria] = useState("");
   const [step, setStep] = useState<0 | 1 | 2>(0);
@@ -34,7 +35,7 @@ export function VerificationForm({ onComplete }: { onComplete: (value: Verificat
     try {
       setStep(1);
       setLifecycle(idleTransaction);
-      const created = await contract.createVerification({ verification_id: verificationId, repository_url: repositoryUrl, release_ref: releaseRef, criteria }, setLifecycle);
+      const created = await contract.createVerification({ verification_id: verificationId, repository_url: repositoryUrl, commit_sha: commitSha, release_ref: releaseRef, criteria }, setLifecycle);
       if (!created.success) throw new Error(created.failure?.message || "Creation execution failed.");
 
       setStep(2);
@@ -59,7 +60,8 @@ export function VerificationForm({ onComplete }: { onComplete: (value: Verificat
       <div className="grid gap-5">
         <div className="grid gap-2"><Label htmlFor="verification-id">Verification ID</Label><Input id="verification-id" maxLength={128} required value={verificationId} onChange={(e) => setVerificationId(e.target.value)} placeholder="release-v1-0-0" disabled={busy} /></div>
         <div className="grid gap-2"><Label htmlFor="repository-url">GitHub repository URL</Label><Input id="repository-url" type="url" maxLength={500} required pattern="https://github\\.com/.+/.+" value={repositoryUrl} onChange={(e) => setRepositoryUrl(e.target.value)} placeholder="https://github.com/owner/repository" disabled={busy} /></div>
-        <div className="grid gap-2"><Label htmlFor="release-ref">Release / tag / version <span className="text-muted-foreground">(optional)</span></Label><Input id="release-ref" maxLength={200} value={releaseRef} onChange={(e) => setReleaseRef(e.target.value)} placeholder="v1.0.0" disabled={busy} /></div>
+        <div className="grid gap-2"><Label htmlFor="commit-sha">Commit SHA</Label><Input id="commit-sha" maxLength={40} minLength={40} required pattern="[0-9a-fA-F]{40}" value={commitSha} onChange={(e) => setCommitSha(e.target.value)} placeholder="0123456789abcdef0123456789abcdef01234567" disabled={busy} /><p className="text-xs text-muted-foreground">Verification is bound to this immutable commit.</p></div>
+        <div className="grid gap-2"><Label htmlFor="release-ref">Release / tag <span className="text-muted-foreground">(optional)</span></Label><Input id="release-ref" maxLength={200} value={releaseRef} onChange={(e) => setReleaseRef(e.target.value)} placeholder="v1.0.0" disabled={busy} /></div>
         <div className="grid gap-2"><Label htmlFor="criteria">Acceptance criteria</Label><Textarea id="criteria" maxLength={8000} required value={criteria} onChange={(e) => setCriteria(e.target.value)} placeholder={'Mandatory requirements:\n- Installation documentation\n- Automated tests\n- MIT license'} disabled={busy} /></div>
       </div>
       {step > 0 && <div className="mt-5 rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm font-medium">Step {step} of 2 — {step === 1 ? "Create verification" : "Run validator verification"}</div>}

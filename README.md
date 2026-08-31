@@ -1,121 +1,191 @@
-# ReleaseProof
+# ReleaseProof V2
 
-ReleaseProof is a GenLayer application for evaluating software-release claims against live, public GitHub evidence. A user records a repository, an optional release reference, and natural-language acceptance criteria. An Intelligent Contract gathers the relevant web pages, asks validators to assess the same evidence, reaches equivalence on a structured result, and persists that result on Studionet.
+ReleaseProof is a GenLayer application that evaluates software-release claims against public, commit-bound GitHub evidence. Every V2 request records a full Git commit SHA, natural-language acceptance criteria, and an optional release/tag. Independent validators inspect the same immutable source snapshot and conditionally inspect CI, artifact, checksum, and signature evidence when the criteria require it.
 
-ReleaseProof is an evidence-based review tool. It does not prove build reproducibility, artifact provenance, repository ownership, or the absence of defects.
+ReleaseProof is an evidence-based review tool. It does not prove build reproducibility, independently hash downloaded binaries, establish artifact provenance beyond the rendered evidence, or guarantee the absence of defects.
 
-## Problem
+## Problem and solution
 
-Software release checks often combine facts that are easy to automate with requirements that need interpretation: whether documentation is usable, source code is present, licensing is clear, or a release page supports a stated claim. Manual review is slow and difficult to reproduce, while a single off-chain evaluator creates a central point of trust.
+Software release checks combine objective facts with requirements that need interpretation. Mutable repository pages are unsuitable as the authoritative record because `HEAD`, a default branch, or a README can change after adjudication.
 
-## Solution
+V2 binds every request to a normalized 40-character commit SHA and uses these authoritative source URLs:
 
-ReleaseProof puts the request and final assessment in an Intelligent Contract. For each request, validators retrieve the public repository, README, and relevant release or branch pages; evaluate every supplied criterion; and return a structured verdict, score, reason code, criterion counts, and short summary. The contract validates that structure before persisting the result.
+```text
+<repository>/commit/<sha>
+<repository>/tree/<sha>
+<repository>/blob/<sha>/README.md
+```
 
-The three possible verdicts are:
+Current `HEAD`, `main`, `master`, and repository-root content cannot substitute for this pinned evidence. If the commit or tree relationship cannot be established, the result cannot be `VERIFIED`.
 
-- `VERIFIED`: every mandatory criterion is supported by the available evidence.
-- `FAILED`: at least one mandatory criterion clearly fails.
-- `INCONCLUSIVE`: evidence is inaccessible, insufficient, contradictory, or ambiguous.
+## Changes made in response to steward review
 
-## Why GenLayer
+**Issue: Verdicts relied on mutable GitHub pages.**
 
-This workflow needs current web access and judgment over natural-language evidence, neither of which fits a conventional deterministic smart contract. GenLayer Intelligent Contracts can perform nondeterministic web retrieval and model evaluation while using multiple validators to establish an equivalent result. The durable request and result remain accessible through the contract.
+Resolution: Every V2 verification is bound to a required full 40-character immutable commit SHA. Authoritative evidence is fetched from commit-pinned commit, tree, and README URLs.
+
+**Issue: CI, signatures, checksums, and release artifacts were not verified when criteria depended on them.**
+
+Resolution: V2 deterministically classifies criteria and conditionally requires CI, artifact, checksum, and signature evidence. Missing required evidence cannot produce `VERIFIED` and canonicalizes conservatively to `INCONCLUSIVE` unless available evidence clearly proves failure.
+
+Release/tag targets must match the reviewed SHA. No mutable `HEAD`, `main`, default-branch, or repository-root evidence can substitute for the reviewed commit. V2 inspects checksum and signature publication, but does not claim binary hashing or independent cryptographic verification.
 
 ## Architecture
 
 ```text
 Browser / Next.js frontend
-  ├─ MetaMask wallet and Studionet RPC
-  ├─ create_verification(...)
-  ├─ request_verification(...)
-  └─ get_verification(...)
+  ├─ create_verification(id, repository, commit SHA, optional release, criteria)
+  ├─ request_verification(id)
+  └─ get_verification(id)
                │
                ▼
-ReleaseProof Intelligent Contract
-  ├─ validates and stores the request
-  ├─ renders live public GitHub pages
+ReleaseProof V2 Intelligent Contract
+  ├─ validates and stores the immutable request
+  ├─ classifies conditional evidence requirements
+  ├─ renders categorized GitHub evidence
+  ├─ applies deterministic VERIFIED gates
   ├─ evaluates evidence through GenLayer validators
-  ├─ checks result structure and validator equivalence
-  └─ persists verdict, score, reason code, and summary
+  └─ persists the compact canonical result
 ```
 
-- `contracts/ReleaseProof.py` contains storage, input validation, evidence retrieval, evaluation, and consensus logic.
-- `frontend/` is a Next.js interface for wallet connection, request creation, verification, lifecycle feedback, and result lookup.
-- `deploy/deployScript.ts` deploys the contract with the GenLayer CLI.
-- `tests/direct/test_releaseproof.py` covers contract behavior in direct mode.
+- `contracts/ReleaseProof.py` contains storage, validation, evidence retrieval, prompt rules, and consensus logic.
+- `frontend/` provides wallet connection, request creation, lifecycle feedback, and result display.
+- `deploy/deployScript.ts` deploys the contract through the GenLayer CLI.
+- `tests/direct/test_releaseproof.py` covers V2 behavior in direct mode.
 
-## Intelligent Contract design
+## Stored verification and public interface
 
-Each verification record contains its ID, creator address, normalized GitHub repository URL, optional release reference, acceptance criteria, status, verdict, score, reason code, and summary.
+Each record contains:
+
+```text
+id
+creator
+repository_url
+commit_sha
+release_ref
+criteria
+status
+verdict
+score
+reason_code
+summary
+```
+
+Rendered evidence bodies are bounded and used only during adjudication; they are not persisted.
 
 The public interface is:
 
-- `create_verification(verification_id, repository_url, release_ref, criteria)` validates input and stores a request with status `CREATED`.
-- `request_verification(verification_id)` retrieves live evidence, runs the validator evaluation, and persists the final result.
-- `get_verification(verification_id)` returns the stored request and result.
+- `create_verification(verification_id, repository_url, commit_sha, release_ref, criteria)`
+- `request_verification(verification_id)`
+- `get_verification(verification_id)`
 
-IDs are unique and completed requests cannot be evaluated again. Inputs and evidence are length-limited. Repository URLs are restricted to public HTTPS GitHub repository URLs, and release references accept a conservative character set.
+The commit SHA is trimmed, lowercased, and must contain exactly 40 hexadecimal characters. Abbreviations and symbolic refs such as `HEAD`, `main`, and `master` are not valid commit inputs.
 
-## Live GitHub and web-evidence flow
+GitHub's rendered commit page may expose the full SHA in canonical page metadata while showing only a short SHA in visible text. ReleaseProof always requests the exact `/commit/<full-sha>` URL. It accepts a visible, boundary-delimited 7–12 character hexadecimal identifier only when it is a prefix of that requested full SHA; a different or absent identifier leaves commit identity unproven and produces `INCONCLUSIVE`.
 
-The evaluator renders the repository page and its README view. If a release reference is supplied, it also renders the corresponding GitHub release and tree pages. An unavailable page is explicitly represented as `[UNAVAILABLE]` rather than inferred.
+## Evidence model
 
-Rendered content is treated as untrusted factual evidence. The evaluation prompt tells validators not to follow instructions embedded in repository content, not to invent missing facts, and to assess every acceptance criterion. Public-page availability, GitHub rendering behavior, and rate limits can therefore affect a result.
+Each in-memory item has a category, URL, availability (`AVAILABLE`, `UNAVAILABLE`, or `NOT_REQUESTED`), and bounded rendered content. Categories include:
 
-## Consensus and equivalence design
+```text
+repository_commit
+commit_tree
+commit_readme
+release
+release_target
+release_tree
+ci
+artifacts
+checksums
+signatures
+```
 
-The leader produces a JSON result containing `verdict`, `score`, `reason_code`, `criteria_met`, `criteria_total`, and `summary`. A result is structurally valid only when the verdict is recognized, numeric fields are in range, criterion counts are coherent, and a `VERIFIED` result has all criteria met with a score of at least 80.
+Unavailable or unrequested evidence never counts as success. All rendered content is untrusted factual material; validators are instructed never to follow instructions embedded in it.
 
-Validators independently evaluate the same URLs and acceptance criteria. Equivalence requires:
+## Release/tag relationship
 
-- the same verdict;
-- scores within 15 points; and
-- a structurally valid result from both leader and validator.
+When a release ref is supplied, V2 renders its release page, commit target, and tree. Release-page or tree existence alone does not prove association: the evaluator must establish that the release/tag target resolves to the exact stored commit SHA. A clear mismatch supports `FAILED`; an inaccessible or unprovable relationship supports `INCONCLUSIVE`.
 
-Exact prose, reason codes, and criterion segmentation are not compared. This avoids treating harmless wording differences as disagreement, while still requiring agreement on the decision and broadly comparable confidence. It is an application-specific equivalence policy, not a guarantee that every evaluator used identical reasoning.
+## Conditional integrity evidence
 
-## Transaction lifecycle
+The contract uses conservative, deterministic keyword classifiers:
 
-Verification uses two wallet-signed writes:
+- CI terms include CI, continuous integration, GitHub Actions, and passing/successful tests, builds, checks, or workflows.
+- Artifact terms include artifacts, release assets, binaries, and packages.
+- Checksum terms include checksums, SHA-256/SHA-512, digests, and cryptographic hashes.
+- Signature terms include signatures, signed, GPG, PGP, Sigstore, and cosign.
 
-1. Create and persist the verification request.
-2. Request the live, web-backed evaluation.
+Ordinary documentation, source, or licensing criteria do not automatically require these categories.
 
-The frontend reports signature, submission, pending consensus, finalization, and GenVM execution states. A transaction is treated as successful only after finalization and successful execution; consensus status alone is not presented as completion. Rollbacks and `FINISHED_WITH_ERROR` responses are surfaced as failures with their available payload.
+For CI criteria, V2 renders `<repository>/commit/<sha>/checks`. A workflow file, Actions page, or README badge is not proof of passing CI. Success requires completed successful checks tied to the reviewed SHA.
 
-## Studionet deployment
+Artifact, checksum, and signature criteria use visible release assets and metadata. A checksum asset proves publication only; V2 does not download and independently hash binary bytes. Likewise, a signature filename proves publication, not cryptographic validity. The evaluator distinguishes visible GitHub verification status from the mere presence of `.asc`, `.sig`, `.minisig`, or Sigstore-related assets.
 
-The validated public-release contract is deployed on GenLayer Studionet:
+## Verdict and consensus
+
+- `VERIFIED`: every mandatory criterion is supported by evidence tied to the immutable review target.
+- `FAILED`: at least one mandatory criterion is clearly contradicted.
+- `INCONCLUSIVE`: required evidence is missing, inaccessible, ambiguous, or unprovable.
+
+Independent of the model, `VERIFIED` is structurally rejected unless commit and tree evidence are available, every conditionally required evidence category is available, every criterion is met, and the score is at least 80.
+
+Validators must agree exactly on verdict, `criteria_met`, and `criteria_total`; scores may differ by at most 15 points. Summary and reason-code wording are not exact-matched.
+
+## Frontend transaction lifecycle
+
+Verification uses two wallet-signed writes: one stores the request and one runs validator consensus. The frontend reports signature, submission, pending consensus, finalization, and GenVM execution states. A transaction is successful only after finalization and successful execution.
+
+The compact form requests a verification ID, repository URL, required full commit SHA, optional release/tag, and acceptance criteria. Results link to the reviewed commit and supplied release.
+
+## Deployment status and V1 history
+
+The final V2 release candidate is deployed and live-validated on GenLayer Studionet:
 
 | Item | Value |
 | --- | --- |
 | Network | GenLayer Studionet |
 | Chain ID | `61999` |
 | RPC | `https://studio.genlayer.com/api` |
-| Contract | `0x261b8C90F511284f1a69e24CCE825f059FB23EdC` |
-| Deployment transaction | `0x6f05588ae5e3f752e2e8d1782a772de936d593aefc5b2103c46c6a2becd6ec3d` |
+| Current V2 contract | `0xA69F25F03936CFa436453a3A00F820ae5e0745fb` |
+| Deployment transaction | `0x27d92f4635672c7a4a4df23ac1ea4d206ceba893485ec2ca4da086b90c6d4877` |
 
-### Verified live example
+The historical, deprecated V1 contract remains available only for its existing records:
 
-The following result was persisted during live Studionet validation:
+```text
+0x261b8C90F511284f1a69e24CCE825f059FB23EdC
+```
+
+V1 is retained for historical results but should not be used for new steward-compliant reviews. It used mutable repository/`HEAD` evidence, did not persist a commit SHA, and did not conditionally require CI, artifact, checksum, or signature evidence.
+
+## Live Studionet verification examples
+
+### Immutable commit-only verification
 
 | Field | Value |
 | --- | --- |
-| Verification ID | `releaseproof-demo-003` |
+| Verification ID | `releaseproof-v2-immutable-demo-002` |
 | Repository | `https://github.com/genlayerlabs/genlayer-project-boilerplate` |
-| Release reference | `main` |
-| Status | `VERIFIED` |
-| Verdict | `VERIFIED` |
-| Score | `95` |
-| Reason code | `ALL_CRITERIA_MET` |
-| Summary | The repository is publicly accessible, includes detailed README installation instructions, working project source code, and an MIT license. |
+| Commit SHA | `a713d30a23f58d77d4bb1e714e2dc3ff08e53055` |
+| Release evidence | `NOT_REQUESTED` |
+| Create transaction | `0xcf1e2bd199755bd0cef6016b72e2a12069b54606fe92b076bb9069f92f2baf05` |
+| Request transaction | `0x46adb5b81d767b82fe252c43aeca7dc97cb063e412a52413825d498fd9f66e57` |
+| Result | `VERIFIED` — score 97, criteria 3/3 |
+| Reason code | `COMMIT_PINNED_EVIDENCE_ALL_CRITERIA_MET` |
 
-This is one recorded validation result for the cited repository and criteria at evaluation time. It should not be generalized to later repository states or unrelated release claims.
+### Exact-commit CI verification
+
+| Field | Value |
+| --- | --- |
+| Verification ID | `releaseproof-v2-ci-demo-002` |
+| Repository | `https://github.com/genlayerlabs/genlayer-project-boilerplate` |
+| Commit SHA | `e685f1f12c4c357787d48390692a654baf576f03` |
+| CI evidence | `AVAILABLE` from the exact commit checks page |
+| Create transaction | `0xb4ae9461851eeb9e0fb8d7678953f1ad6e1fcd88f4192241c49d01708804055e` |
+| Request transaction | `0xf5639209f139e6eb7ee103d1bfc8a6bca9fdd9f5caf07b8f79bd788509c650b6` |
+| Result | `VERIFIED` — score 100, criteria 1/1 |
+| Reason code | `CI_SHA_MATCH_SUCCESS` |
 
 ## Local development
-
-Prerequisites are Node.js with npm, Python 3 with the GenLayer contract tooling, and MetaMask for browser writes.
 
 ```bash
 npm install
@@ -123,41 +193,31 @@ cp frontend/.env.example frontend/.env.local
 npm run dev
 ```
 
-The committed `frontend/.env.example` contains the public Studionet configuration and deployed contract address. Override values in `frontend/.env.local` when needed; that file is ignored and must not contain credentials intended for source control. All `NEXT_PUBLIC_*` values are browser-visible and must never be used for secrets.
+The committed example configuration and runtime default point to the current V2 contract. Override `NEXT_PUBLIC_CONTRACT_ADDRESS` only when intentionally targeting another compatible deployment. All `NEXT_PUBLIC_*` values are browser-visible and must never contain secrets.
 
-## Tests
+GenLayer CLI 0.39.1 coerces an empty positional argument to numeric `0`, so it cannot safely encode `release_ref = ""` for this ABI. Live CLI smoke tests should use a real release ref or use `genlayer-js`, which preserves the empty string. The browser frontend already sends `release_ref` as a string. The contract intentionally does not accept integer `0` as an empty release ref.
 
-Run contract syntax checks, GenVM validation, and direct-mode tests from the repository root:
+Validation commands:
 
 ```bash
 python3 -m py_compile contracts/ReleaseProof.py
 genvm-lint lint contracts/ReleaseProof.py
 genvm-lint validate contracts/ReleaseProof.py
+genvm-lint schema contracts/ReleaseProof.py
 pytest tests/direct/test_releaseproof.py -v
-```
-
-Run frontend type checking and a production build from `frontend/`:
-
-```bash
+cd frontend
 npm run lint
 npm run build
 ```
 
 ## Known limitations
 
-- Only public GitHub repository URLs are accepted.
-- Evidence is limited to pages that GenLayer web rendering can retrieve; private repositories, deleted references, outages, rate limits, and dynamic page behavior may lead to `INCONCLUSIVE`.
-- A release reference is checked through GitHub release and tree URLs, but ReleaseProof does not independently resolve commits or verify downloaded artifacts.
-- Natural-language criteria can be ambiguous and should state mandatory requirements clearly.
-- Prompt-injection defenses instruct evaluators to treat page content as untrusted, but model-based evaluation remains probabilistic.
-- Results describe the evidence available during one transaction and are not automatically refreshed when a repository changes.
-- There is no retry, update, cancellation, or administrative override flow for an existing verification record.
-- The deployment is on Studionet, not a production mainnet.
-
-## Future improvements
-
-- Bind evaluations to resolved commit hashes and include additional evidence sources such as checksums, CI attestations, and signed releases.
-- Store evidence timestamps or compact evidence references to improve later auditability.
-- Add explicit retry/versioning semantics while preserving prior results.
-- Expand repository-provider support without weakening URL validation and untrusted-content handling.
-- Add end-to-end Studionet tests and richer handling for temporarily unavailable evidence.
+- Only public HTTPS GitHub repositories are supported.
+- Public GitHub pages can be unavailable, rate-limited, or incompletely rendered when content is loaded dynamically; required missing evidence leads to `INCONCLUSIVE` and cannot support `VERIFIED`.
+- Web-rendered commit pages establish the repository context available through GitHub, but may not prove every Git reachability distinction without an API or local clone.
+- Release pages and tags can change unless the repository separately enforces immutable releases; V2 records the reviewed source SHA and evaluates the observed relationship during consensus.
+- CI conclusions are limited to what the public commit checks page exposes.
+- V2 inspects published artifact, checksum, and signature evidence but does not download binaries, recompute checksums, or independently perform cryptographic signature verification.
+- Natural-language adjudication remains probabilistic, with deterministic validation and multi-validator equivalence limiting acceptable outcomes.
+- There is no retry, update, cancellation, or administrative override for an existing verification ID.
+- Studionet is not a production mainnet.

@@ -7,6 +7,10 @@
     "dev": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
     "lint": "cd frontend && npm run lint",
+    "manifest:generate": "node scripts/release-manifest.mjs generate",
+    "manifest:verify": "node scripts/release-manifest.mjs verify --check",
+    "test:manifest": "node --test --test-isolation=none tests/release-manifest.test.mjs",
+    "test": "npm run test:manifest",
     "deploy": "genlayer deploy"
   },
   "devDependencies": { "genlayer-js": "^1.1.8" }

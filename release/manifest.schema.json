@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/milanoporte/releaseproof/blob/main/release/manifest.schema.json",
+  "title": "ReleaseProof Portal Milestone v1 release manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "milestone_id",
+    "repository",
+    "hash_algorithm",
+    "declared_runtime_metadata",
+    "files"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "milestone_id": { "type": "string", "minLength": 1 },
+    "repository": { "type": "string", "pattern": "^https://github\\.com/[^/]+/[^/]+$" },
+    "hash_algorithm": { "const": "sha256" },
+    "declared_runtime_metadata": {
+      "type": "object",
+      "description": "Documentary deployment metadata. Its values are declarations and are not independently verified by the manifest.",
+      "additionalProperties": false,
+      "required": ["verification_status", "network", "chain_id", "contract_address"],
+      "properties": {
+        "verification_status": { "const": "documentary_declaration_not_independently_verified" },
+        "network": { "type": "string", "minLength": 1 },
+        "chain_id": { "type": "integer", "minimum": 0 },
+        "contract_address": { "type": "string", "pattern": "^0x[0-9A-Fa-f]{40}$" }
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "size_bytes", "sha256"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Repository-relative POSIX path without empty, dot, parent, backslash, absolute, drive-qualified, or control-character components.",
+            "pattern": "^(?![A-Za-z]:[\\\\/])(?!/)(?!\\.\\.?$)(?!\\.\\.?/)(?!.*//)(?!.*/\\.\\.?(?:/|$))[^\\\\\\u0000-\\u001F\\u007F]+$"
+          },
+          "size_bytes": { "type": "integer", "minimum": 0 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    }
+  }
+}

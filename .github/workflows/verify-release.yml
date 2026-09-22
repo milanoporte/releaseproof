@@ -1,0 +1,45 @@
+name: Verify release integrity
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v[0-9]+.[0-9]+.[0-9]+", "v[0-9]+.[0-9]+.[0-9]+-*"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out reviewed commit
+        # actions/checkout v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Use Node.js 24
+        # actions/setup-node v4.4.0
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked JavaScript dependencies
+        run: npm ci
+
+      - name: Verify canonical release manifest
+        run: npm run manifest:verify
+
+      - name: Test release manifest integrity gate
+        run: npm run test:manifest
+
+      - name: Type-check frontend
+        run: npm run lint
+
+      - name: Build frontend
+        run: npm run build
+
+      # The direct-mode contract tests and GenVM lint/validate/schema checks are
+      # intentionally omitted until their Python toolchain is declared and
+      # pinned in this repository. CI must not guess dependency versions.

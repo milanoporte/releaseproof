@@ -1,5 +1,7 @@
 # ReleaseProof V2
 
+> **Naming:** “Milestone v1” is the first ReleaseProof Portal delivery milestone. “ReleaseProof V2” identifies the current application and intelligent-contract generation. They describe different version axes and do not conflict.
+
 ReleaseProof is a GenLayer application that evaluates software-release claims against public, commit-bound GitHub evidence. Every V2 request records a full Git commit SHA, natural-language acceptance criteria, and an optional release/tag. Independent validators inspect the same immutable source snapshot and conditionally inspect CI, artifact, checksum, and signature evidence when the criteria require it.
 
 ReleaseProof is an evidence-based review tool. It does not prove build reproducibility, independently hash downloaded binaries, establish artifact provenance beyond the rendered evidence, or guarantee the absence of defects.
@@ -184,6 +186,39 @@ V1 is retained for historical results but should not be used for new steward-com
 | Request transaction | `0xf5639209f139e6eb7ee103d1bfc8a6bca9fdd9f5caf07b8f79bd788509c650b6` |
 | Result | `VERIFIED` — score 100, criteria 1/1 |
 | Reason code | `CI_SHA_MATCH_SUCCESS` |
+
+## Portal Milestone v1: verifiable release manifest
+
+Portal Milestone v1 adds a repository-native integrity gate for release-critical committed inputs. [`release/manifest.json`](release/manifest.json) is canonical JSON containing a sorted list of governed paths, byte sizes, and lowercase SHA-256 digests. A reviewer at an immutable Git commit can recompute those values locally and confirm that the committed inputs match the manifest at that same commit.
+
+The manifest also contains declared runtime metadata. Its `verification_status` explicitly labels those values as documentary declarations that this integrity check does not independently verify. The containing Git commit is deliberately not embedded in the committed manifest because doing so would create a circular identity problem.
+
+The governed scope is:
+
+- `contracts/` and `deploy/`;
+- frontend application source under `frontend/app/`, `frontend/components/`, and `frontend/lib/`;
+- frontend public assets and committed frontend configuration;
+- root and frontend package manifests plus the workspace lockfile;
+- `gltest.config.yaml`; and
+- the manifest schema, verifier, tests, and CI integrity workflow.
+
+The manifest excludes itself to avoid self-hashing recursion. It also excludes generated output and caches, `node_modules`, `.git`, local or secret environment files, virtual environments, `.next`, `.vercel`, `artifacts`, `__pycache__`, `.pyc`, and `.tsbuildinfo` files. A new non-excluded file inside a governed directory is treated as unexpected until the manifest is regenerated and reviewed.
+
+Generate or verify the manifest from the repository root:
+
+```bash
+npm run manifest:generate
+npm run manifest:verify
+npm run test:manifest
+```
+
+`manifest:generate` discovers the governed set, rejects unsafe paths and symlinks, and writes deterministic JSON with a final newline. `manifest:verify` runs in check-only mode: it validates the structure, recomputes every byte size and digest, checks the exact governed set, and rejects stale, reordered, or otherwise non-canonical content without rewriting files. Missing, unexpected, duplicate, absolute, traversing, or symlink paths and any size or digest mismatch cause a non-zero exit.
+
+The `Verify release integrity` GitHub Actions workflow runs this check and its tamper-detection tests for pull requests, pushes to `main`, and version-like tags. It also type-checks and builds the frontend from the committed npm lockfile. The existing direct-mode contract tests and GenVM lint/validate/schema commands are not in CI yet because this repository does not declare a reproducible, pinned Python GenLayer toolchain; CI intentionally does not guess dependency versions.
+
+### Security boundary
+
+This feature verifies committed release-input integrity at a reviewed Git commit. It does **not** prove reproducible builds, deployed-byte equivalence, publisher honesty, correctness of checksums for remote release artifacts, or cryptographic signature validity. It also does not independently validate the declared network, chain ID, or contract address. Reviewers must obtain the reviewed commit identity through a trusted channel and review changes to the verifier, workflow, schema, and manifest together.
 
 ## Local development
 

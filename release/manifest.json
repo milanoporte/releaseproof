@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "milestone_id": "releaseproof-portal-v1",
+  "repository": "https://github.com/milanoporte/releaseproof",
+  "hash_algorithm": "sha256",
+  "declared_runtime_metadata": {
+    "verification_status": "documentary_declaration_not_independently_verified",
+    "network": "GenLayer Studionet",
+    "chain_id": 61999,
+    "contract_address": "0xA69F25F03936CFa436453a3A00F820ae5e0745fb"
+  },
+  "files": [
+    {
+      "path": ".github/workflows/verify-release.yml",
+      "size_bytes": 1198,
+      "sha256": "c8cc8cf1181bc0c38c2a42bc65d7427b726665c13e34d4e236911bf4509251f6"
+    },
+    {
+      "path": "contracts/ReleaseProof.py",
+      "size_bytes": 20747,
+      "sha256": "c5198c31651bd98f2bc52fadaefb08f684d9df307ec7ca2cc278ab880ccdd808"
+    },
+    {
+      "path": "contracts/__init__.py",
+      "size_bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "deploy/deployScript.ts",
+      "size_bytes": 1087,
+      "sha256": "e945a1f465308f5f2d84e79e00af77e8e286df400b7de2aaae738fd12b7e638b"
+    },
+    {
+      "path": "frontend/app/globals.css",
+      "size_bytes": 13713,
+      "sha256": "585c451807a123f3bfe6e45565447078dd4d40ab5d62e9100d1f5a4d0bbaff9a"
+    },
+    {
+      "path": "frontend/app/layout.tsx",
+      "size_bytes": 568,
+      "sha256": "c99ae919801616b0a5a50c0b0f6dfed63e97bdc55c5f8ebbfd60486eaf3b1e77"
+    },
+    {
+      "path": "frontend/app/page.tsx",
+      "size_bytes": 388,
+      "sha256": "2ba8562719b350610a8bd6521eda850008ee6467d80fc2dae27ff02d4b556ea6"
+    },
+    {
+      "path": "frontend/app/providers.tsx",
+      "size_bytes": 612,
+      "sha256": "cb9489f9c4e1aee2f36631b2c246a9c890048a5bd288e0f620bc8bcfaa73e5eb"
+    },
+    {
+      "path": "frontend/components.json",
+      "size_bytes": 449,
+      "sha256": "c09ce2e8d3e568c03e7e3af89599defd3a8e7b1cdb35785bd18785799ce715b1"
+    },
+    {
+      "path": "frontend/components/AccountPanel.tsx",
+      "size_bytes": 3029,
+      "sha256": "0023f09a5ab47aa916f3bf87cbea922011b12384d0bc5e8dddc112c4cd8dafc6"
+    },
+    {
+      "path": "frontend/components/AddressDisplay.tsx",
+      "size_bytes": 1772,
+      "sha256": "d2e0f0c1037dba0de9b10aa2b45b5fd351866b6996a1a4f4157f7a11974554c2"
+    },
+    {
+      "path": "frontend/components/Navbar.tsx",
+      "size_bytes": 468,
+      "sha256": "3976f73b0de086af75447920e758fe69c798dac04dedd82fc6ea12fc2a703c07"
+    },
+    {
+      "path": "frontend/components/ReleaseProofDashboard.tsx",
+      "size_bytes": 907,
+      "sha256": "2ebf407ab4e6069ce1f2f569e1f582083b2ccafc8f34b3f4f17eac70200b4a84"
+    },
+    {
+      "path": "frontend/components/TransactionStatus.tsx",
+      "size_bytes": 2986,
+      "sha256": "8ef431a33dc840dd47d639e90820159bbea9e78dbbfb1e325d72190231abe10a"
+    },
+    {
+      "path": "frontend/components/VerificationForm.tsx",
+      "size_bytes": 5436,
+      "sha256": "2c255c6f2098f03134b235ef51f5e988f8fd24eb7a4930fbae4354c436697035"
+    },
+    {
+      "path": "frontend/components/VerificationResult.tsx",
+      "size_bytes": 3269,
+      "sha256": "d3d68a50d5b9d849edadebb1227098838a00616a409f7eadefddcc5bafcc8720"
+    },
+    {
+      "path": "frontend/components/ui/alert.tsx",
+      "size_bytes": 1595,
+      "sha256": "4156051679aa87b74af22405a446d3b2fa3e62c005c726ea3939dc200fd7c09c"
+    },
+    {
+      "path": "frontend/components/ui/badge.tsx",
+      "size_bytes": 1632,
+      "sha256": "92dfe1cb7278ffac5c23656e33d0827da93b067724f377923f618c248204fa67"
+    },
+    {
+      "path": "frontend/components/ui/button.tsx",
+      "size_bytes": 2320,
+      "sha256": "af40f202639e80cbfca37edd7715c7c21984a8c1aff8bcc7698429c9f290d249"
+    },
+    {
+      "path": "frontend/components/ui/dialog.tsx",
+      "size_bytes": 3413,
+      "sha256": "67e5d8c4d3077660391f3841c1d98920439082c99158fac4e3d56811f317bc2f"
+    },
+    {
+      "path": "frontend/components/ui/input.tsx",
+      "size_bytes": 963,
+      "sha256": "b67dea8a8d35c004c6d94c22aacbbf2340b0e536c614e4c87a69d8814a7b4502"
+    },
+    {
+      "path": "frontend/components/ui/label.tsx",
+      "size_bytes": 733,
+      "sha256": "6622e79a1d1ba2fb0d0ab2e68cc0beb1d36c331806b0a5f452e6490ca2d41cf8"
+    },
+    {
+      "path": "frontend/components/ui/textarea.tsx",
+      "size_bytes": 443,
+      "sha256": "6378d962d65c3fee32584c71bcdaf3329f64533ee8e078b1e11aeaf69bcc4a0a"
+    },
+    {
+      "path": "frontend/lib/contracts/ReleaseProof.ts",
+      "size_bytes": 2737,
+      "sha256": "210a80b420b700110b9f1244b2be25111a783f329ef25edab63f86272ef90576"
+    },
+    {
+      "path": "frontend/lib/contracts/types.ts",
+      "size_bytes": 1194,
+      "sha256": "519b2687389588a3d53da556b3de9094a8606c2280a74f9d5cc98cbab35e9ca8"
+    },
+    {
+      "path": "frontend/lib/genlayer/WalletProvider.tsx",
+      "size_bytes": 9348,
+      "sha256": "562d33fc64d7cb1d61db663d7a9aecb1cb50c9b427d00fd508e5a55cbffeadb4"
+    },
+    {
+      "path": "frontend/lib/genlayer/client.ts",
+      "size_bytes": 10068,
+      "sha256": "d134b11a10621e8d5386ffc7cd58b59969b293fef8b4379ab8ecf3b59f3414f9"
+    },
+    {
+      "path": "frontend/lib/genlayer/fees.ts",
+      "size_bytes": 2316,
+      "sha256": "83b97b08abacecb66ec1a2677c22fffa7dab03d57c85e32ddffefda6935f52bd"
+    },
+    {
+      "path": "frontend/lib/genlayer/transactions.ts",
+      "size_bytes": 8215,
+      "sha256": "f892c668b2925290151d83c5024fc11d05c44bf9f7d78fb48217af28c82dd652"
+    },
+    {
+      "path": "frontend/lib/genlayer/wallet.ts",
+      "size_bytes": 871,
+      "sha256": "12ab6b7850717fa0f73b6e7a6e8784dc7211409e7294e71e42fcac164c26eaa4"
+    },
+    {
+      "path": "frontend/lib/hooks/useReleaseProof.ts",
+      "size_bytes": 946,
+      "sha256": "ff4971008bc23466b3531d575d6f346ca327e8f525850dd1695dae307a51ef3c"
+    },
+    {
+      "path": "frontend/lib/utils.ts",
+      "size_bytes": 169,
+      "sha256": "4acbc7165a8d54738ff62b51414e772c08fe78434e524e6d8770180d3ba2925f"
+    },
+    {
+      "path": "frontend/lib/utils/toast.ts",
+      "size_bytes": 3838,
+      "sha256": "a346f9325d7c32bf9fc9c1a0271038d95d6eecc0a2f375d0c243463a134244f2"
+    },
+    {
+      "path": "frontend/next-env.d.ts",
+      "size_bytes": 288,
+      "sha256": "1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b"
+    },
+    {
+      "path": "frontend/next.config.ts",
+      "size_bytes": 199,
+      "sha256": "074eb88a7d305d7783fb77ec8d668b18e49b559e4daa24336b9243ea857cbf74"
+    },
+    {
+      "path": "frontend/package.json",
+      "size_bytes": 1059,
+      "sha256": "f58ba7a4a1ac1510f58f485123553e334c5113b33326edc09ca4e74d1d99f65a"
+    },
+    {
+      "path": "frontend/postcss.config.mjs",
+      "size_bytes": 146,
+      "sha256": "ab4805b77935e8d8a2036e5de3d3a15d6e21229e8e3a1a4aea10b09327709460"
+    },
+    {
+      "path": "frontend/public/favicon.svg",
+      "size_bytes": 350,
+      "sha256": "bf3eaf5ef23581a3e5b914c6103bb28e23e70e3b3ed3a13ad3178e4b65684fb8"
+    },
+    {
+      "path": "frontend/public/fonts/Switzer-Bold.woff2",
+      "size_bytes": 91,
+      "sha256": "5185029437ed10ebc733eda8fc20987e60792183c36e9c2ed51256abf307bfec"
+    },
+    {
+      "path": "frontend/public/fonts/Switzer-Light.woff2",
+      "size_bytes": 91,
+      "sha256": "5185029437ed10ebc733eda8fc20987e60792183c36e9c2ed51256abf307bfec"
+    },
+    {
+      "path": "frontend/public/fonts/Switzer-Regular.woff2",
+      "size_bytes": 91,
+      "sha256": "5185029437ed10ebc733eda8fc20987e60792183c36e9c2ed51256abf307bfec"
+    },
+    {
+      "path": "frontend/public/site.webmanifest",
+      "size_bytes": 214,
+      "sha256": "0ef0fcef6202eea897c903fceb081825cc46ff46b64f0a7c802909da11df765a"
+    },
+    {
+      "path": "frontend/tailwind.config.ts",
+      "size_bytes": 283,
+      "sha256": "d291cdaea2a3b8c889570c9bb93806d8926cfc59a46cd5c65f1c0d4b48ca75a5"
+    },
+    {
+      "path": "frontend/tsconfig.json",
+      "size_bytes": 698,
+      "sha256": "89344599f007febeebd9ca0593d3e6f3aa2d7c2c9f65be4a35819c63aea5ce8c"
+    },
+    {
+      "path": "gltest.config.yaml",
+      "size_bytes": 149,
+      "sha256": "4b8ab0383ab83f038993c36f2c6a31e8983dd71a3652b59c9c70d1f7eb619f11"
+    },
+    {
+      "path": "package-lock.json",
+      "size_bytes": 418964,
+      "sha256": "21a9bd438ee5bf71f1e9e69b3a35b24d3c09c95d600fc8779f4346bbdc5b59ec"
+    },
+    {
+      "path": "package.json",
+      "size_bytes": 602,
+      "sha256": "d760212029fcace1b926dd17cb275535d57fcb24715f7680e0bbe6b1f3c8d4c6"
+    },
+    {
+      "path": "release/manifest.schema.json",
+      "size_bytes": 2116,
+      "sha256": "f3f6a35083424015d5e4eb2ca1daa8fb5d7cc231c4ef2559d16022ed0960828c"
+    },
+    {
+      "path": "scripts/release-manifest.mjs",
+      "size_bytes": 13958,
+      "sha256": "5d161553bb5377ba877707c43fcac80583e69f81966602457b8985605c06452c"
+    },
+    {
+      "path": "tests/release-manifest.test.mjs",
+      "size_bytes": 7925,
+      "sha256": "8ac8388803e99b6aee0aa6cefb15c0ef82208e08b0b23527c0c7045ae91cb004"
+    }
+  ]
+}
